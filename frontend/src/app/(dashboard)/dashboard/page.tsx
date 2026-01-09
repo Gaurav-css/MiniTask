@@ -23,6 +23,8 @@ export default function DashboardPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const fetchTasks = useCallback(async () => {
         try {
             const params = new URLSearchParams();
@@ -50,6 +52,7 @@ export default function DashboardPage() {
 
     const handleAddTask = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await api.post('/tasks', { title, description });
             setTitle('');
@@ -58,24 +61,53 @@ export default function DashboardPage() {
             fetchTasks();
         } catch (error) {
             console.error('Error adding task', error);
+            alert("Failed to add task. Please check your connection.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleUpdateTask = async (id: string, status: Task['status'], title?: string, description?: string) => {
+        // Optimistic Update
+        const originalTasks = [...tasks];
+
+        setTasks(prevTasks => {
+            const updatedTasks = prevTasks.map(task =>
+                task._id === id
+                    ? { ...task, status, title: title ?? task.title, description: description ?? task.description }
+                    : task
+            );
+
+            // Re-apply sort to keep UI consistent
+            return updatedTasks.sort((a, b) => {
+                if (a.status === 'completed' && b.status !== 'completed') return 1;
+                if (a.status !== 'completed' && b.status === 'completed') return -1;
+                return 0;
+            });
+        });
+
         try {
             await api.put(`/tasks/${id}`, { status, title, description });
-            fetchTasks();
+            // Background revalidation (optional, but good for consistency)
+            // We skip fetchTasks() to avoid UI flicker, trusting our optimistic update.
         } catch (error) {
             console.error('Error updating task', error);
+            setTasks(originalTasks); // Rollback
+            alert("Failed to update task. Please check your connection.");
         }
     };
 
     const handleDeleteTask = async (id: string) => {
+        // Optimistic Update
+        const originalTasks = [...tasks];
+        setTasks(prev => prev.filter(t => t._id !== id));
+
         try {
             await api.delete(`/tasks/${id}`);
-            fetchTasks();
         } catch (error) {
             console.error('Error deleting task', error);
+            setTasks(originalTasks); // Rollback
+            alert("Failed to delete task.");
         }
     };
 
@@ -140,17 +172,54 @@ export default function DashboardPage() {
                                         required
                                     />
                                     <textarea
-                                        placeholder="DETAILS (OPTIONAL)"
+                                        placeholder="DETAILS (OPTIONAL) - Start with '1. ' to create a numbered list"
                                         className="w-full bg-transparent border-2 border-gray-200 focus:border-black p-4 text-sm focus:outline-none transition-all placeholder:text-gray-300 resize-none h-32 font-sans"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const textarea = e.currentTarget;
+                                                const value = textarea.value;
+                                                const selectionStart = textarea.selectionStart;
+
+                                                const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+                                                const currentLineEnd = value.indexOf('\n', selectionStart);
+                                                const currentLine = value.substring(currentLineStart, currentLineEnd === -1 ? value.length : currentLineEnd);
+
+                                                // Match "1." or "1)" or "1 " at start of line
+                                                const match = currentLine.match(/^(\d+)([\.\)])\s/);
+                                                if (match) {
+                                                    // If line is empty (just number), remove it
+                                                    if (currentLine.trim() === match[0].trim()) {
+                                                        e.preventDefault();
+                                                        const newValue = value.substring(0, currentLineStart) + value.substring(selectionStart);
+                                                        setDescription(newValue);
+                                                        return;
+                                                    }
+
+                                                    e.preventDefault();
+                                                    const currentNumber = parseInt(match[1], 10);
+                                                    const separator = match[2]; // . or )
+                                                    const nextNumber = currentNumber + 1;
+                                                    const nextLine = `\n${nextNumber}${separator} `;
+
+                                                    const newValue = value.substring(0, selectionStart) + nextLine + value.substring(textarea.selectionEnd);
+                                                    setDescription(newValue);
+
+                                                    requestAnimationFrame(() => {
+                                                        textarea.selectionStart = textarea.selectionEnd = selectionStart + nextLine.length;
+                                                    });
+                                                }
+                                            }
+                                        }}
                                     />
                                     <div className="flex justify-end">
                                         <button
                                             type="submit"
-                                            className="bg-black text-[#FFFDF2] px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-all"
+                                            className="bg-black text-[#FFFDF2] px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={isSubmitting}
                                         >
-                                            Save Entry
+                                            {isSubmitting ? 'Saving...' : 'Save Entry'}
                                         </button>
                                     </div>
                                 </form>

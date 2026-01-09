@@ -1,9 +1,18 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UserProfile() {
     const { user } = useAuth();
+    const [greeting, setGreeting] = useState('');
+
+    useEffect(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) setGreeting('Good Morning');
+        else if (hour < 18) setGreeting('Good Afternoon');
+        else setGreeting('Good Evening');
+    }, []);
 
     if (!user) return null;
 
@@ -22,6 +31,7 @@ export default function UserProfile() {
                 </span>
             </div>
 
+            <p className="text-xs font-serif italic text-gray-500 mb-1">{greeting},</p>
             <h2 className="text-lg font-bold text-black uppercase tracking-wider mb-1">{user.name}</h2>
             <p className="text-gray-500 text-xs uppercase tracking-widest mb-6 font-sans">{user.email}</p>
 

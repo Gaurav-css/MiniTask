@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import confetti from 'canvas-confetti';
 
 interface Task {
     _id: string;
@@ -19,6 +20,34 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDesc, setEditDesc] = useState(task.description);
+
+    // Confetti trigger helper
+    const triggerConfetti = () => {
+        const end = Date.now() + 1000;
+        const colors = ['#bb0000', '#ffffff'];
+
+        (function frame() {
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: colors
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: colors
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    };
+
     const statusColors = {
         pending: {
             border: 'border-red-700',
@@ -49,7 +78,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
     return (
         <div
-            className={`group relative bg-[#FFFDF2] border-2 ${colors.border} p-6 transition-all hover:-translate-y-1`}
+            className={`group relative bg-[#FFFDF2] border-2 ${colors.border} p-6 transition-all md:hover:-translate-y-1 hover:z-10 z-0`}
             style={{
                 boxShadow: `8px 8px 0px 0px ${colors.shadow}`
             }}
@@ -95,6 +124,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                                         let newStatus = task.status;
                                         if (allChecked && task.status !== 'completed') {
                                             newStatus = 'completed';
+                                            triggerConfetti();
                                         } else if (!allChecked && task.status === 'completed') {
                                             newStatus = 'in-progress';
                                         }
@@ -129,8 +159,44 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                         <textarea
                             value={editDesc}
                             onChange={(e) => setEditDesc(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const textarea = e.currentTarget;
+                                    const value = textarea.value;
+                                    const selectionStart = textarea.selectionStart;
+
+                                    const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+                                    const currentLineEnd = value.indexOf('\n', selectionStart);
+                                    const currentLine = value.substring(currentLineStart, currentLineEnd === -1 ? value.length : currentLineEnd);
+
+                                    // Match "1." or "1)" at start of line
+                                    const match = currentLine.match(/^(\d+)([\.\)])\s/);
+                                    if (match) {
+                                        // If line is empty (just number), remove it
+                                        if (currentLine.trim() === match[0].trim()) {
+                                            e.preventDefault();
+                                            const newValue = value.substring(0, currentLineStart) + value.substring(selectionStart);
+                                            setEditDesc(newValue);
+                                            return;
+                                        }
+
+                                        e.preventDefault();
+                                        const currentNumber = parseInt(match[1], 10);
+                                        const separator = match[2]; // . or )
+                                        const nextNumber = currentNumber + 1;
+                                        const nextLine = `\n${nextNumber}${separator} `;
+
+                                        const newValue = value.substring(0, selectionStart) + nextLine + value.substring(textarea.selectionEnd);
+                                        setEditDesc(newValue);
+
+                                        requestAnimationFrame(() => {
+                                            textarea.selectionStart = textarea.selectionEnd = selectionStart + nextLine.length;
+                                        });
+                                    }
+                                }
+                            }}
                             className="w-full text-sm border border-black bg-transparent p-2 focus:outline-none font-sans min-h-[100px]"
-                            placeholder="Type your items here... (Each line is a task)"
+                            placeholder="Type your items here... (Each line is a task). Start with '1. ' for auto-numbering."
                         />
                     </div>
                     <div className="flex gap-2 justify-end">
@@ -144,8 +210,14 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                 <div className="relative flex items-center gap-4">
                     <select
                         value={task.status}
-                        onChange={(e) => onUpdate(task._id, e.target.value as Task['status'], task.title, task.description)}
-                        className={`appearance-none bg-transparent font-bold uppercase text-xs tracking-wider cursor-pointer pr-6 focus:outline-none ${colors.text}`}
+                        onChange={(e) => {
+                            const newStatus = e.target.value as Task['status'];
+                            if (newStatus === 'completed' && task.status !== 'completed') {
+                                triggerConfetti();
+                            }
+                            onUpdate(task._id, newStatus, task.title, task.description);
+                        }}
+                        className={`appearance-none bg-transparent font-bold uppercase text-xs tracking-wider cursor-pointer pr-6 py-2 focus:outline-none ${colors.text}`}
                     >
                         <option value="pending" className="text-red-700 font-bold">Mark as Pending</option>
                         <option value="in-progress" className="text-blue-700 font-bold">Mark as Active</option>
@@ -169,6 +241,18 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                     Remove
                 </button>
             </div>
+
+            {/* Completed Stamp Effect */}
+            {task.status === 'completed' && (
+                <>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-4 border-green-700 text-green-700 px-4 py-2 font-black text-2xl uppercase tracking-widest opacity-20 pointer-events-none select-none z-10 whitespace-nowrap">
+                        Completed
+                    </div>
+                    <div className="absolute bottom-2 right-16 text-[10px] font-bold text-green-700 uppercase tracking-widest animate-pulse">
+                        Great Job!
+                    </div>
+                </>
+            )}
         </div>
     );
 }
