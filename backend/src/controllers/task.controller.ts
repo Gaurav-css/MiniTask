@@ -13,7 +13,7 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
         const { search, status } = req.query;
         const query: any = {
             user: req.user?._id,
-            isDeleted: false // Only active tasks
+            isDeleted: { $ne: true } // Include false AND undefined/null (legacy data)
         };
 
         if (status && status !== 'all') {
