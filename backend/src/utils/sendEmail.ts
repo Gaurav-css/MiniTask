@@ -22,7 +22,7 @@ const sendEmail = async (options: EmailOptions): Promise<void> => {
                 Messages: [
                     {
                         From: {
-                            Email: process.env.SENDER_EMAIL || 'noreply@taskflow.com',
+                            Email: process.env.SENDER_EMAIL || 'noreply@minitask.com',
                             Name: 'MiniTask App',
                         },
                         To: [

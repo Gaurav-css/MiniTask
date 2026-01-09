@@ -26,10 +26,10 @@ For a full-stack Next.js + Node.js/Express application, we recommend a **Decoupl
     - `PORT`: `10000` (default for Render).
     - `MAILJET_API_KEY` & `MAILJET_API_SECRET`: For emails.
     - `SENDER_EMAIL`: The verified email in Mailjet.
-    - `FRONTEND_URL`: The URL of your future Vercel app (e.g., `https://taskflow.vercel.app`) - used for CORS security.
+    - `FRONTEND_URL`: The URL of your future Vercel app (e.g., `https://minitask.vercel.app`) - used for CORS security.
     - **NOTE**: Do NOT add `NEXT_PUBLIC_...` variables here.
 
-5.  **Deploy**: Render will give you a URL (e.g., `https://taskflow-api.onrender.com`).
+5.  **Deploy**: Render will give you a URL (e.g., `https://minitask-api.onrender.com`).
 
 ## 3. Frontend (Vercel)
 **Why**: Created by Next.js authors, edge network, instant deployments.
@@ -42,9 +42,9 @@ For a full-stack Next.js + Node.js/Express application, we recommend a **Decoupl
     - **Root Directory**: `frontend`
     - **Build Command**: `next build` (default)
 4.  **Environment Variables**:
-    - `NEXT_PUBLIC_API_URL`: Set this to your **Render Backend URL** (e.g., `https://taskflow-api.onrender.com/api`).
+    - `NEXT_PUBLIC_API_URL`: Set this to your **Render Backend URL** (e.g., `https://minitask-api.onrender.com/api`).
     - **NOTE**: Do NOT add `MONGO_URI` or backend secrets here.
-5.  **Deploy**: Vercel will give you a live URL (e.g., `https://taskflow.vercel.app`).
+5.  **Deploy**: Vercel will give you a live URL (e.g., `https://minitask.vercel.app`).
 
 ---
 

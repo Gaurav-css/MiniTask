@@ -44,7 +44,7 @@ export default function Home() {
             animate={{ opacity: 1, letterSpacing: "0.4em" }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           >
-            Welcome to TaskFlow
+            Welcome to MiniTask
           </motion.p>
 
           <motion.h1
@@ -102,7 +102,7 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          © {new Date().getFullYear()} TaskFlow / Premium Experience
+          © {new Date().getFullYear()} MiniTask / Premium Experience
         </motion.footer>
       </main>
     </div>

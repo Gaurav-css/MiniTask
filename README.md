@@ -66,8 +66,8 @@ The codebase follows a strict MVC and Component-based architecture for maximum m
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/your-username/taskflow.git
-    cd taskflow
+    git clone https://github.com/your-username/minitask.git
+    cd minitask
     ```
 
 2.  **Setup Backend**
