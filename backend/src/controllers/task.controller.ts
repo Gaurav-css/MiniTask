@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Task from '../models/Task';
+import Task, { ITask } from '../models/Task';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 // @desc    Get all tasks
@@ -84,7 +84,7 @@ export const createTask = async (req: AuthRequest, res: Response) => {
 // @access  Private
 export const updateTask = async (req: AuthRequest, res: Response) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findById(req.params.id) as ITask | null;
 
         if (task) {
             if (task.user.toString() !== req.user?._id.toString()) {
