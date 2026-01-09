@@ -1,10 +1,10 @@
-# TaskFlow - Premium Task Management Web App
+# MiniTask - Premium Task Management Web App
 
-![TaskFlow Banner](https://via.placeholder.com/1200x400?text=TaskFlow+Dashboard)
+![MiniTask Banner](https://via.placeholder.com/1200x400?text=MiniTask+Dashboard)
 
 ## 🚀 Overview
 
-**TaskFlow** is a modern, full-stack Task Management application built with performance, security, and scalability in mind. It uses a **Next.js** frontend with a premium, animated UI and a robust **Node.js/Express** backend secured with enterprise-grade practices.
+**MiniTask** is a modern, full-stack Task Management application built with performance, security, and scalability in mind. It uses a **Next.js** frontend with a premium, animated UI and a robust **Node.js/Express** backend secured with enterprise-grade practices.
 
 ### Key Features
 - **✨ Premium UI/UX**: Interactive Canvas animations (Snow/Cursor effects), dark mode, and smooth **Framer Motion** transitions.

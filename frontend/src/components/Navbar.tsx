@@ -28,7 +28,7 @@ export default function Navbar() {
                             <span className="text-[#FFFDF2] font-serif font-bold text-xl">T</span>
                         </div>
                         <span className="text-xl font-bold text-black uppercase tracking-widest font-serif">
-                            TaskFlow
+                            MiniTask
                         </span>
                     </Link>
 

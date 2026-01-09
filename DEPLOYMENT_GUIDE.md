@@ -16,13 +16,20 @@ For a full-stack Next.js + Node.js/Express application, we recommend a **Decoupl
 1.  Push your code to GitHub.
 2.  Sign up at [Render](https://render.com).
 3.  New **Web Service** -> Connect GitHub Repo.
-4.  **Settings**:
+3.  **Settings**:
     - **Root Directory**: `backend`
     - **Build Command**: `npm install && npm run build`
     - **Start Command**: `npm start`
-5.  **Environment Variables**:
-    - Add `MONGO_URI`, `JWT_SECRET`, `PORT` (usually 10000), `MAILJET_API_KEY`, etc.
-6.  **Deploy**: Render will give you a URL (e.g., `https://taskflow-api.onrender.com`).
+4.  **Environment Variables** (Add these in the Dashboard):
+    - `MONGO_URI`: Your MongoDB Atlas connection string.
+    - `JWT_SECRET`: A secure random string for tokens.
+    - `PORT`: `10000` (default for Render).
+    - `MAILJET_API_KEY` & `MAILJET_API_SECRET`: For emails.
+    - `SENDER_EMAIL`: The verified email in Mailjet.
+    - `FRONTEND_URL`: The URL of your future Vercel app (e.g., `https://taskflow.vercel.app`) - used for CORS security.
+    - **NOTE**: Do NOT add `NEXT_PUBLIC_...` variables here.
+
+5.  **Deploy**: Render will give you a URL (e.g., `https://taskflow-api.onrender.com`).
 
 ## 3. Frontend (Vercel)
 **Why**: Created by Next.js authors, edge network, instant deployments.
@@ -36,6 +43,7 @@ For a full-stack Next.js + Node.js/Express application, we recommend a **Decoupl
     - **Build Command**: `next build` (default)
 4.  **Environment Variables**:
     - `NEXT_PUBLIC_API_URL`: Set this to your **Render Backend URL** (e.g., `https://taskflow-api.onrender.com/api`).
+    - **NOTE**: Do NOT add `MONGO_URI` or backend secrets here.
 5.  **Deploy**: Vercel will give you a live URL (e.g., `https://taskflow.vercel.app`).
 
 ---
