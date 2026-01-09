@@ -1,6 +1,6 @@
  - Premium Task Management Web App
 
-![MiniTask Banner](https://via.placeholder.com/1200x400?text=MiniTask+Dashboard)
+
 
 ## 🚀 Overview
 
