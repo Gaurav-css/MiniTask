@@ -122,18 +122,6 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                 <>
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex-1 pr-4">
-                            {task.createdAt && (
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
-                                    {new Date(task.createdAt).toLocaleString('en-US', {
-                                        weekday: 'short',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        hour12: true
-                                    })}
-                                </p>
-                            )}
                             <h3 className="text-lg font-bold text-black font-serif line-clamp-1 uppercase tracking-wide">
                                 {task.title}
                             </h3>
@@ -143,7 +131,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                         </span>
                     </div>
 
-                    <div className="mb-8 font-sans text-sm text-gray-600 min-h-[3rem]">
+                    <div className="mb-4 font-sans text-sm text-gray-600 h-32 overflow-y-auto custom-scrollbar pr-2">
                         {task.description.split('\n').map((line, index) => {
                             if (!line.trim()) return <br key={index} />;
 
@@ -180,9 +168,17 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                                         onUpdate(task._id, newStatus, task.title, newDescription);
                                     }}
                                 >
+                                    <div className={`mt-0.5 mr-3 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0
+                                        ${isChecked ? 'bg-indigo-500 border-indigo-500' : 'border-gray-300 hover:border-indigo-400'}`}>
+                                        {isChecked && (
+                                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                    </div>
                                     <span
-                                        className={`leading-tight transition-all duration-500 select-none bg-gradient-to-r from-black to-black bg-no-repeat bg-[length:0%_2px] bg-[5%_55%] ${isChecked
-                                            ? '!bg-[length:100%_2px] text-gray-400 opacity-60'
+                                        className={`leading-tight transition-all duration-300 select-none ${isChecked
+                                            ? 'text-gray-400 line-through'
                                             : 'text-black font-medium hover:text-gray-600'
                                             }`}
                                     >
@@ -217,22 +213,24 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                                     const currentLineEnd = value.indexOf('\n', selectionStart);
                                     const currentLine = value.substring(currentLineStart, currentLineEnd === -1 ? value.length : currentLineEnd);
 
-                                    // Match "1." or "1)" at start of line
-                                    const match = currentLine.match(/^(\d+)([\.\)])\s/);
+                                    // Match "1." or "1)" at start of line, allowing indentation and optional space
+                                    const match = currentLine.match(/^(\s*)(\d+)([\.\)])(\s?)/);
                                     if (match) {
-                                        // If line is empty (just number), remove it
+                                        // If line is empty (just number + space), remove it (end list)
                                         if (currentLine.trim() === match[0].trim()) {
                                             e.preventDefault();
+                                            // Remove the current line characters up to the cursor
                                             const newValue = value.substring(0, currentLineStart) + value.substring(selectionStart);
                                             setEditDesc(newValue);
                                             return;
                                         }
 
                                         e.preventDefault();
-                                        const currentNumber = parseInt(match[1], 10);
-                                        const separator = match[2]; // . or )
+                                        const indentation = match[1];
+                                        const currentNumber = parseInt(match[2], 10);
+                                        const separator = match[3]; // . or )
                                         const nextNumber = currentNumber + 1;
-                                        const nextLine = `\n${nextNumber}${separator} `;
+                                        const nextLine = `\n${indentation}${nextNumber}${separator} `;
 
                                         const newValue = value.substring(0, selectionStart) + nextLine + value.substring(textarea.selectionEnd);
                                         setEditDesc(newValue);
@@ -252,7 +250,8 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
                         <button onClick={handleSave} className="bg-black text-[#FFFDF2] px-3 py-1 text-xs font-bold uppercase">Save</button>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             <div className={`flex items-center justify-between pt-4 border-t-2 ${colors.border}`}>
                 <div className="relative flex items-center gap-4">
@@ -291,16 +290,18 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
             </div>
 
             {/* Completed Stamp Effect */}
-            {task.status === 'completed' && (
-                <>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-4 border-green-700 text-green-700 px-4 py-2 font-black text-2xl uppercase tracking-widest opacity-20 pointer-events-none select-none z-10 whitespace-nowrap">
-                        Completed
-                    </div>
-                    <div className="absolute bottom-2 right-16 text-[10px] font-bold text-green-700 uppercase tracking-widest animate-pulse">
-                        Great Job!
-                    </div>
-                </>
-            )}
-        </div>
+            {
+                task.status === 'completed' && (
+                    <>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-4 border-green-700 text-green-700 px-4 py-2 font-black text-2xl uppercase tracking-widest opacity-20 pointer-events-none select-none z-10 whitespace-nowrap">
+                            Completed
+                        </div>
+                        <div className="absolute bottom-2 right-16 text-[10px] font-bold text-green-700 uppercase tracking-widest animate-pulse">
+                            Great Job!
+                        </div>
+                    </>
+                )
+            }
+        </div >
     );
 }

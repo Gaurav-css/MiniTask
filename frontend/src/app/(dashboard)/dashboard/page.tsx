@@ -5,8 +5,12 @@ import api from '../../../services/api';
 import TaskCard from '../../../components/TaskCard';
 import TaskFilters from '../../../components/Dashboard/TaskFilters';
 import UserProfile from '../../../components/Dashboard/UserProfile';
+import CalendarWidget from '../../../components/Dashboard/CalendarWidget';
+
 
 import Tour from '../../../components/Tour';
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 interface Task {
     _id: string;
@@ -124,20 +128,23 @@ export default function DashboardPage() {
                         </div>
                         <div id="tour-stats" className="block p-6 bg-[#FFFDF2] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                             <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-4 border-b border-black pb-2">Overview</h3>
-                            <div className="font-sans grid grid-cols-3 gap-2 lg:block lg:space-y-4 text-center lg:text-left">
-                                <div className="flex flex-col lg:flex-row justify-between items-center">
-                                    <span className="text-gray-600 text-[10px] lg:text-sm uppercase">Total</span>
-                                    <span className="font-bold text-lg lg:text-xl">{tasks.length}</span>
+                            <div className="font-sans grid grid-cols-3 gap-2 text-center">
+                                <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded border border-gray-200">
+                                    <span className="text-gray-500 text-[10px] uppercase font-bold">Total</span>
+                                    <span className="font-bold text-xl">{tasks.length}</span>
                                 </div>
-                                <div className="flex flex-col lg:flex-row justify-between items-center">
-                                    <span className="text-gray-600 text-[10px] lg:text-sm uppercase">Pending</span>
-                                    <span className="font-bold text-lg lg:text-xl">{tasks.filter(t => t.status === 'pending').length}</span>
+                                <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded border border-gray-200">
+                                    <span className="text-gray-500 text-[10px] uppercase font-bold">Pending</span>
+                                    <span className="font-bold text-xl">{tasks.filter(t => t.status === 'pending').length}</span>
                                 </div>
-                                <div className="flex flex-col lg:flex-row justify-between items-center">
-                                    <span className="text-gray-600 text-[10px] lg:text-sm uppercase">Done</span>
-                                    <span className="font-bold text-lg lg:text-xl">{tasks.filter(t => t.status === 'completed').length}</span>
+                                <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded border border-gray-200">
+                                    <span className="text-gray-500 text-[10px] uppercase font-bold">Done</span>
+                                    <span className="font-bold text-xl">{tasks.filter(t => t.status === 'completed').length}</span>
                                 </div>
                             </div>
+                        </div>
+                        <div className="hidden lg:block">
+                            <CalendarWidget />
                         </div>
                     </div>
 
@@ -151,6 +158,8 @@ export default function DashboardPage() {
                                 <p className="text-gray-600 mt-2 font-sans text-sm tracking-wide">MANAGE YOUR TASKS</p>
                             </div>
 
+
+
                             <button
                                 id="tour-new-entry"
                                 onClick={() => setIsAdding(!isAdding)}
@@ -160,97 +169,126 @@ export default function DashboardPage() {
                             </button>
                         </div>
 
-                        {isAdding && (
-                            <div className="mb-10 p-8 bg-[#FFFDF2] border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                                <h3 className="text-xl font-bold mb-6 text-black uppercase tracking-wide border-b border-black pb-2">New Entry Details</h3>
-                                <form onSubmit={handleAddTask} className="space-y-6 font-sans">
-                                    <input
-                                        type="text"
-                                        placeholder="TITLE"
-                                        className="w-full bg-transparent border-b-2 border-gray-300 focus:border-black px-2 py-3 text-lg focus:outline-none transition-all placeholder:text-gray-300"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        required
-                                    />
-                                    <textarea
-                                        placeholder="DETAILS (OPTIONAL) - Start with '1. ' to create a numbered list"
-                                        className="w-full bg-transparent border-2 border-gray-200 focus:border-black p-4 text-sm focus:outline-none transition-all placeholder:text-gray-300 resize-none h-32 font-sans"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                const textarea = e.currentTarget;
-                                                const value = textarea.value;
-                                                const selectionStart = textarea.selectionStart;
+                        {/* AI Features Removed */}
 
-                                                const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-                                                const currentLineEnd = value.indexOf('\n', selectionStart);
-                                                const currentLine = value.substring(currentLineStart, currentLineEnd === -1 ? value.length : currentLineEnd);
+                        <AnimatePresence>
+                            {isAdding && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                    className="mb-10 p-8 bg-[#FFFDF2] border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+                                >
+                                    <h3 className="text-xl font-bold mb-6 text-black uppercase tracking-wide border-b border-black pb-2">New Entry Details</h3>
+                                    <form onSubmit={handleAddTask} className="space-y-6 font-sans">
+                                        <input
+                                            type="text"
+                                            placeholder="TITLE"
+                                            className="w-full bg-transparent border-b-2 border-gray-300 focus:border-black px-2 py-3 text-lg focus:outline-none transition-all placeholder:text-gray-300"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            required
+                                        />
+                                        <textarea
+                                            placeholder="DETAILS (OPTIONAL)"
+                                            className="w-full bg-transparent border-2 border-gray-200 focus:border-black p-4 text-sm focus:outline-none transition-all placeholder:text-gray-300 resize-none h-32 font-sans"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const textarea = e.currentTarget;
+                                                    const value = textarea.value;
+                                                    const selectionStart = textarea.selectionStart;
 
-                                                // Match "1." or "1)" or "1 " at start of line
-                                                const match = currentLine.match(/^(\d+)([\.\)])\s/);
-                                                if (match) {
-                                                    // If line is empty (just number), remove it
-                                                    if (currentLine.trim() === match[0].trim()) {
+                                                    const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+                                                    const currentLineEnd = value.indexOf('\n', selectionStart);
+                                                    const currentLine = value.substring(currentLineStart, currentLineEnd === -1 ? value.length : currentLineEnd);
+
+                                                    // Match "1." or "1)" at start of line, allowing indentation and optional space
+                                                    const match = currentLine.match(/^(\s*)(\d+)([\.\)])(\s?)/);
+                                                    if (match) {
+                                                        // If line is empty (just number + space), remove it (end list)
+                                                        if (currentLine.trim() === match[0].trim()) {
+                                                            e.preventDefault();
+                                                            const newValue = value.substring(0, currentLineStart) + value.substring(selectionStart);
+                                                            setDescription(newValue);
+                                                            return;
+                                                        }
+
                                                         e.preventDefault();
-                                                        const newValue = value.substring(0, currentLineStart) + value.substring(selectionStart);
+                                                        const indentation = match[1];
+                                                        const currentNumber = parseInt(match[2], 10);
+                                                        const separator = match[3]; // . or )
+                                                        const nextNumber = currentNumber + 1;
+                                                        const nextLine = `\n${indentation}${nextNumber}${separator} `;
+
+                                                        const newValue = value.substring(0, selectionStart) + nextLine + value.substring(textarea.selectionEnd);
                                                         setDescription(newValue);
-                                                        return;
+
+                                                        requestAnimationFrame(() => {
+                                                            textarea.selectionStart = textarea.selectionEnd = selectionStart + nextLine.length;
+                                                        });
                                                     }
-
-                                                    e.preventDefault();
-                                                    const currentNumber = parseInt(match[1], 10);
-                                                    const separator = match[2]; // . or )
-                                                    const nextNumber = currentNumber + 1;
-                                                    const nextLine = `\n${nextNumber}${separator} `;
-
-                                                    const newValue = value.substring(0, selectionStart) + nextLine + value.substring(textarea.selectionEnd);
-                                                    setDescription(newValue);
-
-                                                    requestAnimationFrame(() => {
-                                                        textarea.selectionStart = textarea.selectionEnd = selectionStart + nextLine.length;
-                                                    });
                                                 }
-                                            }
-                                        }}
-                                    />
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="submit"
-                                            className="bg-black text-[#FFFDF2] px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting ? 'Saving...' : 'Save Entry'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
+                                            }}
+                                        />
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="submit"
+                                                className="bg-black text-[#FFFDF2] px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                disabled={isSubmitting}
+                                            >
+                                                {isSubmitting ? 'Saving...' : 'Save Entry'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <div className="space-y-6">
                             <div id="tour-filters">
                                 <TaskFilters onFilterChange={setFilters} />
                             </div>
 
-                            <div id="tour-tasks" className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {tasks.length > 0 ? (
-                                    tasks.map((task) => (
-                                        <TaskCard
-                                            key={task._id}
-                                            task={task}
-                                            onUpdate={handleUpdateTask}
-                                            onDelete={handleDeleteTask}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="col-span-full flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-gray-300">
-                                        <h3 className="text-xl font-bold text-black uppercase tracking-widest">No Entries Found</h3>
-                                        <p className="text-gray-500 mt-2 font-sans text-sm">
-                                            Your task list is currently empty
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <motion.div
+                                id="tour-tasks"
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
+                                layout
+                            >
+                                <AnimatePresence mode='popLayout'>
+                                    {tasks.length > 0 ? (
+                                        tasks.map((task) => (
+                                            <motion.div
+                                                key={task._id}
+                                                layout
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <TaskCard
+                                                    task={task}
+                                                    onUpdate={handleUpdateTask}
+                                                    onDelete={handleDeleteTask}
+                                                />
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="col-span-full flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-gray-300"
+                                        >
+                                            <h3 className="text-xl font-bold text-black uppercase tracking-widest">No Entries Found</h3>
+                                            <p className="text-gray-500 mt-2 font-sans text-sm">
+                                                Your task list is currently empty
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
                         </div>
                     </div>
                 </div>

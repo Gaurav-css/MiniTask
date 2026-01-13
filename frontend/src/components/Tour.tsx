@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TourStep {
     targetId: string;
@@ -16,63 +17,71 @@ interface TourProps {
 }
 
 export default function Tour({ steps, isOpen, onClose }: TourProps) {
+    // ... (state and logic mostly same, checking below for adjustments)
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [lineCoords, setLineCoords] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
+    const [mounted, setMounted] = useState(false);
 
-    // Reset when opening
     useEffect(() => {
-        if (isOpen) setCurrentStepIndex(0);
-    }, [isOpen]);
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    // ... (rest of logic)
 
     useEffect(() => {
         if (!isOpen) return;
 
         const updatePosition = () => {
-            const step = steps[currentStepIndex];
+            if (!step) return;
+
             const element = document.getElementById(step.targetId);
 
             if (element) {
                 const rect = element.getBoundingClientRect();
                 const scrollTop = window.scrollY;
-                const isMobile = window.innerWidth < 1024; // Check if mobile/tablet
+                const isMobile = window.innerWidth < 1024;
 
                 // Basic positioning logic
                 let top = 0;
                 let left = 0;
-                const buffer = 40; // Increased buffer for thread space
-                const boxWidth = Math.min(window.innerWidth * 0.9, 320); // Responsive width calculation
-                const boxHeight = 200; // Approx
+                let startX = 0, startY = 0, endX = 0, endY = 0;
+                const buffer = 40;
+                const boxWidth = Math.min(320, window.innerWidth - 32);
+                const boxHeight = 180;
 
-                let startX = 0; // Box connection point
-                let startY = 0;
-                let endX = rect.left + (rect.width / 2); // Target center
-                let endY = rect.top + scrollTop + (rect.height / 2);
-
-                // Force center on mobile for better UX, or use simpler logic
-                const activePosition = isMobile ? 'center' : step.position;
+                let activePosition = step.position;
+                if (isMobile) {
+                    if (step.position === 'left' || step.position === 'right') {
+                        activePosition = rect.top > window.innerHeight / 2 ? 'top' : 'bottom';
+                    }
+                }
 
                 switch (activePosition) {
                     case 'bottom':
                         top = rect.bottom + scrollTop + buffer;
-                        left = rect.left + (rect.width / 2) - (boxWidth / 2);
+                        left = Math.max(10, Math.min(window.innerWidth - boxWidth - 10, rect.left + (rect.width / 2) - (boxWidth / 2)));
                         startX = left + (boxWidth / 2);
                         startY = top;
+                        endX = rect.left + (rect.width / 2);
                         endY = rect.bottom + scrollTop;
                         break;
                     case 'top':
                         top = rect.top + scrollTop - buffer - boxHeight;
-                        left = rect.left + (rect.width / 2) - (boxWidth / 2);
+                        left = Math.max(10, Math.min(window.innerWidth - boxWidth - 10, rect.left + (rect.width / 2) - (boxWidth / 2)));
                         startX = left + (boxWidth / 2);
                         startY = top + boxHeight;
+                        endX = rect.left + (rect.width / 2);
                         endY = rect.top + scrollTop;
                         break;
                     case 'left':
                         top = rect.top + scrollTop;
                         left = rect.left - boxWidth - buffer;
                         startX = left + boxWidth;
-                        startY = top + 50; // Somewhat middle of box
+                        startY = top + 50;
                         endX = rect.left;
+                        endY = rect.top + scrollTop + (rect.height / 2);
                         break;
                     case 'right':
                         top = rect.top + scrollTop;
@@ -80,21 +89,21 @@ export default function Tour({ steps, isOpen, onClose }: TourProps) {
                         startX = left;
                         startY = top + 50;
                         endX = rect.right;
+                        endY = rect.top + scrollTop + (rect.height / 2);
                         break;
                     case 'center':
-                        // Handled in setStyle
                         break;
                 }
 
-                // Scroll to element
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                 setStyle({
                     top: activePosition === 'center' ? '50%' : `${top}px`,
                     left: activePosition === 'center' ? '50%' : `${left}px`,
                     transform: activePosition === 'center' ? 'translate(-50%, -50%)' : 'none',
-                    position: activePosition === 'center' ? 'fixed' : 'absolute', // Fixed for center to avoid scroll issues
-                    zIndex: 100
+                    position: activePosition === 'center' ? 'fixed' : 'absolute',
+                    zIndex: 9999, // High Z-Index
+                    width: activePosition === 'center' ? 'min(90vw, 320px)' : `${boxWidth}px`
                 });
 
                 if (activePosition !== 'center') {
@@ -102,47 +111,57 @@ export default function Tour({ steps, isOpen, onClose }: TourProps) {
                 } else {
                     setLineCoords(null);
                 }
+            } else {
+                // Fallback to center if element not found
+                setStyle({
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    position: 'fixed',
+                    zIndex: 9999,
+                    width: 'min(90vw, 320px)'
+                });
+                setLineCoords(null);
             }
         };
 
-        // Small delay to allow layout to settle
-        const timer = setTimeout(updatePosition, 100);
+        const timer = setTimeout(updatePosition, 300);
         window.addEventListener('resize', updatePosition);
+        window.addEventListener('scroll', updatePosition);
 
         return () => {
             clearTimeout(timer);
             window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition);
         }
     }, [currentStepIndex, isOpen, steps]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
+    // ... handler helpers same ...
     const step = steps[currentStepIndex];
+    if (!step) return null;
     const isLast = currentStepIndex === steps.length - 1;
 
     const handleNext = () => {
-        if (isLast) {
-            onClose();
-        } else {
-            setCurrentStepIndex(prev => prev + 1);
-        }
+        if (isLast) onClose(); else setCurrentStepIndex(prev => prev + 1);
     };
 
     const handleBack = () => {
-        if (currentStepIndex > 0) {
-            setCurrentStepIndex(prev => prev - 1);
-        }
+        if (currentStepIndex > 0) setCurrentStepIndex(prev => prev - 1);
     };
 
-    return (
-        <div className="absolute inset-0 z-50 pointer-events-none h-full w-full">
+    return createPortal(
+        <div className="absolute inset-0 z-[9999] pointer-events-none h-full w-full">
             {/* Overlay */}
             <div className="fixed inset-0 bg-black/20 pointer-events-auto" onClick={onClose} />
 
             {/* Thread Line */}
             {lineCoords && (
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible" style={{ height: '200vh' }}>
-                    {/* The Thread */}
+                <svg
+                    className="absolute top-0 left-0 w-full pointer-events-none overflow-visible"
+                    style={{ height: `${Math.max(document.body.scrollHeight, window.innerHeight)}px` }}
+                >
                     <path
                         d={`M${lineCoords.x1} ${lineCoords.y1} Q ${(lineCoords.x1 + lineCoords.x2) / 2} ${(lineCoords.y1 + lineCoords.y2) / 2 + 20} ${lineCoords.x2} ${lineCoords.y2}`}
                         stroke="black"
@@ -150,15 +169,13 @@ export default function Tour({ steps, isOpen, onClose }: TourProps) {
                         fill="none"
                         strokeDasharray="4 2"
                     />
-                    {/* Target Dot */}
                     <circle cx={lineCoords.x2} cy={lineCoords.y2} r="4" fill="black" />
-                    {/* Box Dot */}
                     <circle cx={lineCoords.x1} cy={lineCoords.y1} r="3" fill="black" />
                 </svg>
             )}
 
             <div
-                className="pointer-events-auto absolute w-[90vw] sm:w-80 bg-[#FFFDF2] border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300"
+                className="pointer-events-auto bg-[#FFFDF2] border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300"
                 style={style}
             >
                 <div className="flex justify-between items-start mb-4 border-b border-black pb-2">
@@ -177,7 +194,7 @@ export default function Tour({ steps, isOpen, onClose }: TourProps) {
                     <button
                         onClick={handleBack}
                         disabled={currentStepIndex === 0}
-                        className={`text-xs font-bold uppercase px-4 py-2 border border-black transition-colors ${currentStepIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-black hover:text-[#FFFDF2]'}`}
+                        className={`text-xs font-bold uppercase px-4 py-2 border transition-colors ${currentStepIndex === 0 ? 'text-gray-300 border-gray-300 cursor-not-allowed' : 'text-black border-black hover:bg-black hover:text-[#FFFDF2]'}`}
                     >
                         Back
                     </button>
@@ -189,6 +206,7 @@ export default function Tour({ steps, isOpen, onClose }: TourProps) {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
